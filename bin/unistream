@@ -1,0 +1,38 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+require 'optparse'
+
+require_relative '../lib/transfer/countries'
+require_relative '../lib/transfer/currencies'
+require_relative '../lib/transfer/transfer'
+require_relative '../lib/unistream'
+
+options = {}
+option_parser = OptionParser.new do |opt|
+  opt.on('-f', '--from FROM')
+  opt.on('-t', '--to TO')
+  opt.on('-s', '--sending-currency SENDING_CURRENCY')
+  opt.on('-r', '--receiving-currency RECEIVING_CURRENCY')
+  opt.on('-a', '--amount AMOUNT')
+  opt.on('-k', '--token TOKEN')
+  opt.on('-u', '--user-agent USER_AGENT')
+end
+option_parser.parse!(into: options)
+
+unless %i[from to token user-agent].all? { |o| options.key?(o) }
+  puts option_parser.help
+  exit 1
+end
+
+unistream = Unistream.new(options[:token], options[:'user-agent'])
+
+amount = options[:amount]&.to_i || 1000
+countries = Transfer::Countries.new(options[:from], options[:to])
+currencies = Transfer::Currencies.new(options[:'sending-currency'],
+                                      options[:'receiving-currency'])
+transfer = Transfer::Transfer.new(countries, currencies, amount)
+
+result = unistream.calculate(transfer)
+
+puts format('%.4f', 1 / result['fees'][0]['rate'])

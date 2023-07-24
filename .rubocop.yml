@@ -1,0 +1,13 @@
+require: rubocop-rake
+
+AllCops:
+  NewCops: enable
+
+Layout/EndOfLine:
+  Enabled: false
+
+Layout/LineLength:
+  Max: 80
+
+Style/Documentation:
+  Enabled: false

@@ -1,0 +1,37 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+require 'countries'
+require 'optparse'
+
+require_relative '../lib/koronapay'
+require_relative '../lib/transfer/countries'
+require_relative '../lib/transfer/currencies'
+require_relative '../lib/transfer/transfer'
+
+options = {}
+option_parser = OptionParser.new do |opt|
+  opt.on('-f', '--from FROM')
+  opt.on('-t', '--to TO')
+  opt.on('-a', '--amount AMOUNT')
+  opt.on('-l', '--language LANGUAGE')
+end
+option_parser.parse!(into: options)
+
+unless %i[from to].all? { |o| options.key?(o) }
+  puts option_parser.help
+  exit 1
+end
+
+koronapay = KoronaPay.new(options[:language] || 'en')
+countries = Transfer::Countries.new(options[:from], options[:to])
+amount = options[:amount]&.to_i || 1000
+
+koronapay.currency_pairs(countries).each do |pair|
+  next if pair.from == pair.to
+
+  transfer = Transfer::Transfer.new(countries, pair, amount)
+  exchange_rate = koronapay.exchange_rate(transfer)
+
+  puts "#{pair} #{exchange_rate}"
+end
