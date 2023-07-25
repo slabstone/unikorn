@@ -27,7 +27,8 @@ class Unistream
   def headers
     {
       authorization: "Bearer #{@token}",
-      'user-agent': @user_agent
+      'user-agent': @user_agent,
+      referer: 'https://unistream.ru/'
     }
   end
 end
